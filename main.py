@@ -200,9 +200,11 @@ rows = retval
 print 'Default frame resolution ', columns, 'x', rows
 
 # Set frame resolution
-print 'Setting new resolution to 640 x 480'
-columns = 640
-rows = 480
+if columns > 1000:
+    if raw_input("Do you want to reduce resolution to increase speed? (y/n)") == "y":
+        print 'Setting new resolution to 640 x 480'
+        columns = 640
+        rows = 480
 
 cap.set(3, columns)
 cap.set(4, rows)
@@ -237,6 +239,8 @@ while True:
     cv2.imshow('frame', img)
     if cv2.waitKey(1) & 0xFF == ord('s'):
         break
+
+print "Press q to quit"
 
 while True:
     # Capture frame
