@@ -47,6 +47,7 @@ class FdtdVar:
         self.mvy = np.zeros(temp, dtype=np.int8)
         temp = (self.r, self.c)
         self.pr = np.zeros(temp)
+        self.gaussamp = np.zeros(temp)
         self.mpr = np.zeros(temp, dtype=np.int8)
         self.dx = wavelmin/10.0
         self.dt = cn * self.dx / c0[0]
@@ -70,6 +71,21 @@ class FdtdVar:
         self.vyt = np.zeros(temp)
         print "dx [m] = ", self.dx
         print "dt [s] = ", self.dt
+        rtemp = np.arange(0, self.r, 1)
+        ctemp = np.arange(0, self.c, 1)
+        rm, cm = np.meshgrid(rtemp, ctemp)
+        rc = np.int(self.r / 2)
+        cc = np.int(self.c / 2)
+        if stype == "point":
+            fwhmc = 2
+            fwhmr = fwhmc
+            self.gaussamp = np.exp(-((rm - rc) ** 2 / (2 * fwhmr ** 2) + (cm - cc) ** 2 / (2 * fwhmc ** 2))).T
+        elif stype == "line":
+            fwhmc = 8
+            fwhmr = 2
+            self.gaussamp = np.exp(-((rm - rc) ** 2 / (2 * fwhmr ** 2) + (cm - cc) ** 2 / (2 * fwhmc ** 2))).T
+        else:
+            sys.exit("Error: enter point of line for type of source")
 
     def update_domain(self):
         self.mvx[:, :] = 0
@@ -78,23 +94,17 @@ class FdtdVar:
     def source(self, nt):
         rm = self.r
         cm = self.c
-        prs = 2.5 * self.dx * np.sin(2 * pi * self.freq * nt * self.dt) / self.cb[0]
-        if stype == "point":
-            rsrc = np.int(rm / 2)
-            csrc = np.int(cm / 2)
-            self.pr[rsrc, csrc] = self.pr[rsrc, csrc] - self.cb[self.mpr[rsrc, csrc]] * prs / self.dx
-        elif stype == "line":
-            rsrc = range(np.int(rm / 2) - 50, np.int(rm / 2) + 50, 1)
-            csrc = np.int(cm/2)
-            self.pr[rsrc, csrc] = self.pr[rsrc, csrc] - self.cb[self.mpr[rsrc, csrc]] * prs / self.dx
-        else:
-            print "Error: enter point of line for type of source"
+        prs = self.dx * np.sin(2 * pi * self.freq * nt * self.dt) / self.cb[0]
+        self.pr[1:rm - 1, 1:cm - 1] = (self.pr[1:rm - 1, 1:cm - 1]
+                                       - self.cb[self.mpr[1:rm - 1, 1:cm - 1]] * prs
+                                       * self.gaussamp[1:rm - 1, 1:cm - 1] / self.dx)
 
     def fdtd_update(self):
         ri = self.r
         ci = self.c
 
-        self.pr[0:ri, 0:ci] = (self.ca[self.mpr[0:ri, 0:ci]] * self.pr[0:ri, 0:ci] - self.cb[self.mpr[0:ri, 0:ci]]
+        self.pr[0:ri, 0:ci] = (self.ca[self.mpr[0:ri, 0:ci]] * self.pr[0:ri, 0:ci]
+                               - self.cb[self.mpr[0:ri, 0:ci]]
                                * ((self.vx[0:ri, 1:ci + 1] - self.vx[0:ri, 0:ci])
                                   + (self.vy[1:ri + 1, 0:ci] - self.vy[0:ri, 0:ci])))
         self.vx[0:ri, 1:ci] = (self.da[self.mvx[0:ri, 1:ci]] * self.vx[0:ri, 1:ci]
@@ -109,24 +119,28 @@ class FdtdVar:
         c2 = 2 * self.dx / (c0[0] * self.dt + self.dx)
         c3 = (c0[0] * self.dt) ** 2 / (2 * self.dx * (c0[0] * self.dt + self.dx))
         # Left and right boundaries
-        self.vx[1:ri - 1, 0] = (-self.vxl[1:ri - 1, 1, 1] + c1 * (self.vx[1:ri - 1, 1] + self.vxl[1:ri - 1, 0, 1])
+        self.vx[1:ri - 1, 0] = (-self.vxl[1:ri - 1, 1, 1]
+                                + c1 * (self.vx[1:ri - 1, 1] + self.vxl[1:ri - 1, 0, 1])
                                 + c2 * (self.vxl[1:ri - 1, 0, 0] + self.vxl[1:ri - 1, 1, 0])
                                 + c3 * (self.vxl[2:ri, 0, 0] - 2 * self.vxl[1:ri - 1, 0, 0]
                                         + self.vxl[0:ri - 2, 0, 0] + self.vxl[2:ri, 1, 0]
                                         - 2 * self.vxl[1:ri - 1, 1, 0] + self.vxl[0:ri - 2, 1, 0]))
-        self.vx[1:ri - 1, ci] = (-self.vxr[1:ri - 1, 1, 1] + c1 * (self.vx[1:ri - 1, ci - 1] + self.vxr[1:ri - 1, 0, 1])
+        self.vx[1:ri - 1, ci] = (-self.vxr[1:ri - 1, 1, 1]
+                                 + c1 * (self.vx[1:ri - 1, ci - 1] + self.vxr[1:ri - 1, 0, 1])
                                  + c2 * (self.vxr[1:ri - 1, 0, 0] + self.vxr[1:ri - 1, 1, 0])
                                  + c3 * (self.vxr[2:ri, 0, 0] - 2 * self.vxr[1:ri - 1, 0, 0]
                                          + self.vxr[0:ri - 2, 0, 0] + self.vxr[2:ri, 1, 0]
                                          - 2 * self.vxr[1:ri - 1, 1, 0] + self.vxr[0:ri - 2, 1, 0]))
 
         # Bottom and top boundaries
-        self.vy[0, 1:ci - 1] = (-self.vyb[1:ci - 1, 1, 1] + c1 * (self.vy[1, 1:ci - 1] + self.vyb[1:ci - 1, 0, 1])
+        self.vy[0, 1:ci - 1] = (-self.vyb[1:ci - 1, 1, 1]
+                                + c1 * (self.vy[1, 1:ci - 1] + self.vyb[1:ci - 1, 0, 1])
                                 + c2 * (self.vyb[1:ci - 1, 0, 0] + self.vyb[1:ci - 1, 1, 0])
                                 + c3 * (self.vyb[2:ci, 0, 0] - 2 * self.vyb[1:ci - 1, 0, 0]
                                         + self.vyb[0:ci - 2, 0, 0] + self.vyb[2:ci, 1, 0]
                                         - 2 * self.vyb[1:ci - 1, 1, 0] + self.vyb[0:ci - 2, 1, 0]))
-        self.vy[ri, 1:ci - 1] = (-self.vyt[1:ci - 1, 1, 1] + c1 * (self.vy[ri - 1, 1:ci - 1] + self.vyt[1:ci - 1, 0, 1])
+        self.vy[ri, 1:ci - 1] = (-self.vyt[1:ci - 1, 1, 1]
+                                 + c1 * (self.vy[ri - 1, 1:ci - 1] + self.vyt[1:ci - 1, 0, 1])
                                  + c2 * (self.vyt[1:ci - 1, 0, 0] + self.vyt[1:ci - 1, 1, 0])
                                  + c3 * (self.vyt[2:ci, 0, 0] - 2 * self.vyt[1:ci - 1, 0, 0]
                                          + self.vyt[0:ci - 2, 0, 0] + self.vyt[2:ci, 1, 0]
@@ -154,12 +168,15 @@ class FdtdVar:
 
 
 def test():
-    t1 = FdtdVar(100, 100)
+    t1 = FdtdVar(480, 640)
     for nt in range(1, 500, 1):
-        t1.update_domain()
+        # t1.update_domain()
         t1.fdtd_update()
         t1.source(nt)
         t1.boundary()
+        cv2.imshow('frame', t1.pr)
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
         plt.pcolormesh(t1.pr, cmap="gray_r", vmin=-1, vmax=1)
         plt.axis("image")
         plt.colorbar()
@@ -194,9 +211,12 @@ fs = FdtdVar(rows, columns)
 tc = 0
 
 # Wait to start wave propagation
-start = True
 print "Press s to start wave propagation"
-while start:
+while True:
+    # Reset frame boundaries
+    fs.mvx.fill(0)
+    fs.mvy.fill(0)
+
     # Capture frame
     retval, frame = cap.read()
 
@@ -216,7 +236,9 @@ while start:
     idx = imgtemp < 0.4
     fs.mvy[idx] = 1
 
-print "Press q to quit"
+plt.pcolormesh(fs.mvx, cmap="gray_r")
+plt.axis("image")
+plt.colorbar()
 
 while True:
     # Capture frame
@@ -226,8 +248,8 @@ while True:
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)/256.0
 
     # Update image with FDTD solution
-    fs.source(tc)
     fs.fdtd_update()
+    fs.source(tc)
     fs.boundary()
     imgdisp = img + fs.pr
 
