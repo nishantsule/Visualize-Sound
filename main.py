@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import sys
 
 # Courant number
-# cn = 0.99 / np.sqrt(2)
 cn = 1.0 / 2.0
 # Pi
 pi = 3.14
@@ -169,7 +168,7 @@ def test():
     plt.show()
 
 
-test()
+# test()
 
 # Create VideoCapture object
 cap = cv2.VideoCapture(0)
@@ -229,7 +228,7 @@ while True:
     # Update image with FDTD solution
     fs.source(tc)
     fs.fdtd_update()
-    # fs.boundary()
+    fs.boundary()
     imgdisp = img + fs.pr
 
     # Display image
