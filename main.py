@@ -211,6 +211,14 @@ while start:
     if cv2.waitKey(1) & 0xFF == ord('s'):
         break
 
+    # Create rigid material
+    imgtemp = np.pad(img, ((0, 0), (0, 1)), 'constant', constant_values=1.0)
+    idx = imgtemp < 0.4
+    fs.mvx[idx] = 1
+    imgtemp = np.pad(img, ((0, 1), (0, 0)), 'constant', constant_values=1.0)
+    idx = imgtemp < 0.4
+    fs.mvy[idx] = 1
+
 print "Press q to quit"
 
 while True:
@@ -220,21 +228,11 @@ while True:
     # Convert to grayscale
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)/256.0
 
-    # Create rigid material
-    imgtemp = np.pad(img, ((0, 0), (0, 1)), 'constant', constant_values=1.0)
-    idx = imgtemp < 0.4
-    fs.mvx[idx] = 1
-    imgtemp = np.pad(img, ((0, 1), (0, 0)), 'constant', constant_values=1.0)
-    idx = imgtemp < 0.4
-    fs.mvy[idx] = 1
-
     # Update image with FDTD solution
     fs.source(tc)
     fs.fdtd_update()
     fs.boundary()
     imgdisp = img + fs.pr
-    fs.mvx.fill(0)
-    fs.mvy.fill(0)
 
     # Display image
     cv2.imshow('frame', imgdisp)
