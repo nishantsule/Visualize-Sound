@@ -78,7 +78,7 @@ class FdtdVar:
     def source(self, nt):
         rm = self.r
         cm = self.c
-        prs = self.dx * np.sin(2 * pi * self.freq * nt * self.dt) / self.cb[0]
+        prs = 2.5 * self.dx * np.sin(2 * pi * self.freq * nt * self.dt) / self.cb[0]
         if stype == "point":
             rsrc = np.int(rm / 2)
             csrc = np.int(cm / 2)
