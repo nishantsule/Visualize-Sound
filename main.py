@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import sys
 
 # Courant number
-cn = 0.99 / np.sqrt(2)
+# cn = 0.99 / np.sqrt(2)
+cn = 1.0 / 2.0
 # Pi
 pi = 3.14
 # Number of media = 2
@@ -154,15 +155,12 @@ class FdtdVar:
 
 
 def test():
-    t1 = FdtdVar(8, 8)
-    for nt in range(1, 100, 1):
+    t1 = FdtdVar(100, 100)
+    for nt in range(1, 500, 1):
         t1.update_domain()
         t1.fdtd_update()
         t1.source(nt)
         t1.boundary()
-        cv2.imshow('frame', t1.pr)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
         plt.pcolormesh(t1.pr, cmap="gray_r", vmin=-1, vmax=1)
         plt.axis("image")
         plt.colorbar()
@@ -171,7 +169,7 @@ def test():
     plt.show()
 
 
-# test()
+test()
 
 # Create VideoCapture object
 cap = cv2.VideoCapture(0)
@@ -231,7 +229,7 @@ while True:
     # Update image with FDTD solution
     fs.source(tc)
     fs.fdtd_update()
-    fs.boundary()
+    # fs.boundary()
     imgdisp = img + fs.pr
 
     # Display image
