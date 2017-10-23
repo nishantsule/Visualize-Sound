@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import sys
 
 # Courant number
 cn = 0.99 / np.sqrt(2)
@@ -21,11 +22,15 @@ elif vs == "water":
     c0 = (1481, 0)
     rho = (1000, 1.0e6)
 else:
-    c0 = (float(vs), 0)
-    mdensity = float(raw_input("Enter density of medium in kg/m^3: "))
-    rho = (mdensity, 1.0e6)
-wavelmin = 346.13/20000.0
-wavel = c0[0]/freq
+    try:
+        c0 = (float(vs), 0)
+        mdensity = float(raw_input("Enter density of medium in kg/m^3: "))
+        rho = (mdensity, 1.0e6)
+        wavel = c0[0] / freq
+    except ValueError:
+        print "This input needs to be air, water, or the numeric value of sound velocity in m/s"
+        sys.exit("sound velocity error")
+wavelmin = 346.13 / 20000.0
 stype = raw_input("Enter point or line for type of source: ")
 
 
