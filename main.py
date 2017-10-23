@@ -13,7 +13,10 @@ nm = 2
 alpha = (0.0, 0.0)  # sound attenuation coefficient
 alphap = (0.0, 0.0)  # sound attenuation coefficient
 # Ask for user input
-freq = float(raw_input("Enter the sound frequency in Hz (20-20000): "))
+try:
+    freq = float(raw_input("Enter the sound frequency in Hz (20-20000): "))
+except ValueError:
+    sys.exit("Error: enter a number between 20 and 20000")
 vs = raw_input("Enter sound velocity in m/s (If medium is air or water enter air or water): ")
 if vs == "air":
     c0 = (346.13, 0)
@@ -28,10 +31,11 @@ else:
         rho = (mdensity, 1.0e6)
         wavel = c0[0] / freq
     except ValueError:
-        print "This input needs to be air, water, or the numeric value of sound velocity in m/s"
-        sys.exit("sound velocity error")
+        sys.exit("Error: enter a numeric value, or air, or water")
 wavelmin = 346.13 / 20000.0
 stype = raw_input("Enter point or line for type of source: ")
+if stype != "line" and stype != "point":
+    sys.exit("Error: source needs to be either point or line")
 
 
 class FdtdVar:
@@ -81,11 +85,9 @@ class FdtdVar:
             fwhmr = fwhmc
             self.gaussamp = np.exp(-((rm - rc) ** 2 / (2 * fwhmr ** 2) + (cm - cc) ** 2 / (2 * fwhmc ** 2))).T
         elif stype == "line":
-            fwhmc = 8
-            fwhmr = 2
+            fwhmc = 2
+            fwhmr = 16
             self.gaussamp = np.exp(-((rm - rc) ** 2 / (2 * fwhmr ** 2) + (cm - cc) ** 2 / (2 * fwhmc ** 2))).T
-        else:
-            sys.exit("Error: enter point of line for type of source")
 
     def update_domain(self):
         self.mvx[:, :] = 0
