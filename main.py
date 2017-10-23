@@ -198,7 +198,7 @@ tc = 0
 
 # Wait to start wave propagation
 start = True
-print "Press s to start wave propagation and q to quit"
+print "Press s to start wave propagation"
 while start:
     # Capture frame
     retval, frame = cap.read()
@@ -210,6 +210,8 @@ while start:
     cv2.imshow('frame', img)
     if cv2.waitKey(1) & 0xFF == ord('s'):
         break
+
+print "Press q to quit"
 
 while True:
     # Capture frame
