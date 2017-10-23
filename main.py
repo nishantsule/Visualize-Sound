@@ -213,7 +213,7 @@ tc = 0
 # Wait to start wave propagation
 print "Press s to start wave propagation"
 while True:
-    # Reset frame boundaries
+    # Reset domain
     fs.mvx.fill(0)
     fs.mvy.fill(0)
 
@@ -223,11 +223,6 @@ while True:
     # Convert to grayscale
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) / 256.0
 
-    # Display image
-    cv2.imshow('frame', img)
-    if cv2.waitKey(1) & 0xFF == ord('s'):
-        break
-
     # Create rigid material
     imgtemp = np.pad(img, ((0, 0), (0, 1)), 'constant', constant_values=1.0)
     idx = imgtemp < 0.4
@@ -236,9 +231,10 @@ while True:
     idx = imgtemp < 0.4
     fs.mvy[idx] = 1
 
-plt.pcolormesh(fs.mvx, cmap="gray_r")
-plt.axis("image")
-plt.colorbar()
+    # Display image
+    cv2.imshow('frame', img)
+    if cv2.waitKey(1) & 0xFF == ord('s'):
+        break
 
 while True:
     # Capture frame
