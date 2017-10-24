@@ -61,7 +61,6 @@ class FdtdVar:
         self.gaussamp = np.zeros(temp)
         self.mpr = np.zeros(temp, dtype=np.int8)
         self.dx = wavelmin/10.0
-        # self.dt = cn * self.dx / c0[0]
         self.dt = cn * self.dx / np.amax(c0)
         self.ca = np.ones(nm)
         self.cb = np.ones(nm)
@@ -96,18 +95,6 @@ class FdtdVar:
             fwhmc = 2
             fwhmr = 16
             self.gaussamp = np.exp(-((rm - rc) ** 2 / (2 * fwhmr ** 2) + (cm - cc) ** 2 / (2 * fwhmc ** 2))).T
-
-    def update_domain(self):
-        fs.mvx.fill(0)
-        fs.mvy.fill(0)
-        for i in range(0, nm, 1):
-            # self.ca[i] = ((2 * c0[i]**2 * rho[i] - alpha[i] * self.dt)
-            #               / (2 * c0[i]**2 * rho[i] + alpha[i] * self.dt))
-            self.cb[i] = c0[i] ** 2 * rho[i] * self.dt / self.dx
-            # self.da[i] = ((2 * rho[i] - alphap[i] * self.dt)
-            #               / (2 * rho[i] + alphap[i] * self.dt))
-            self.db[i] = self.dt / (rho[i] * self.dx)
-        self.da[1] = 0
 
     def source(self, nt):
         rm = self.r
@@ -188,7 +175,6 @@ class FdtdVar:
 def test():
     t1 = FdtdVar(480, 640)
     for nt in range(1, 500, 1):
-        # t1.update_domain()
         t1.fdtd_update()
         t1.source(nt)
         t1.boundary()
