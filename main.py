@@ -21,6 +21,7 @@ if dflag == "d":
     rho = (1.2, 1.0e6)
     stype = "point"
     mflag = "n"
+    print "Point source of 15000 Hz in air with default camera resolution"
 elif dflag == "c":
     try:
         freq = float(raw_input("Enter the sound frequency in Hz (20-20000): "))
@@ -236,10 +237,10 @@ retval = cap.get(3)
 columns = retval
 retval = cap.get(4)
 rows = retval
-print 'Default frame resolution ', np.int(columns), 'x', np.int(rows)
 
 # Set frame resolution
 if dflag == "c" and columns > 1000:
+    print 'Default frame resolution ', np.int(columns), 'x', np.int(rows)
     if raw_input("Do you want to reduce resolution to increase speed? (y/n) ") == "y":
         print 'Setting new resolution to 640 x 480'
         columns = 640
