@@ -7,12 +7,12 @@ import sys
 cn = 0.9 / np.sqrt(2.0)
 # Pi
 pi = 3.14
-# Number of media = 2
-nm = 2
 # Constants
 alpha = (0.0, 0.0)  # sound attenuation coefficient
 alphap = (0.0, 0.0)  # sound attenuation coefficient
-wavelmin = 346.13 / 20000.0
+# Default number of media
+nm = 2
+
 # Ask for user input
 dflag = raw_input("Enter d if you want the default setup or c for custom: ")
 if dflag == "d":
@@ -20,6 +20,7 @@ if dflag == "d":
     c0 = (346.13, 0)
     rho = (1.2, 1.0e6)
     stype = "point"
+    mflag = "n"
 elif dflag == "c":
     try:
         freq = float(raw_input("Enter the sound frequency in Hz (20-20000): "))
@@ -43,6 +44,26 @@ elif dflag == "c":
     stype = raw_input("Enter point or line for type of source: ")
     if stype != "line" and stype != "point":
         sys.exit("Error: source needs to be either point or line")
+    mflag = raw_input("Do you want a block of medium at a different temperature? (y/n) ")
+    if mflag == "y":
+        nm = 3
+        temparature = float(raw_input("Enter absolute temperature in K (50-500): "))
+        ct = c0[0] * np.sqrt(temparature/293)
+        c0 = (c0[0], 0, ct)
+        rho = (rho[0], 1.0e6, rho[0])
+        alpha = (0.0, 0.0, 0.0)
+        alphap = (0.0, 0.0, 0.0)
+    elif mflag == "n":
+        nm = 2
+    else:
+        sys.exit("Error: enter y to add a block of different temperature or enter n")
+else:
+    sys.exit("Error: enter d for default setup or c for custom")
+
+if np.amin(c0) == 0:
+    wavelmin = c0[0] / 20000.0
+else:
+    wavelmin = np.amin(c0) / 20000.0
 
 
 class FdtdVar:
@@ -171,6 +192,23 @@ class FdtdVar:
             self.vyt[0:ci, i, 1] = self.vyt[0:ci, i, 0]
             self.vyt[0:ci, i, 0] = self.vy[ri - i, 0:ci]
 
+    def update_domain(self):
+        if mflag == "y":
+            cm = self.c
+            rm = self.r
+            c1 = np.int(cm/2) + np.int(cm/8)
+            c2 = c1 + np.int(cm/8)
+            self.mvx.fill(0)
+            self.mvy.fill(0)
+            self.mpr.fill(0)
+            self.mvx[40:rm - 40, c1:c2] = 2
+            self.mvy[40:rm - 40, c1:c2] = 2
+            self.mpr[40:rm - 40, c1:c2] = 2
+        elif mflag == "n":
+            self.mvx.fill(0)
+            self.mvy.fill(0)
+            self.mpr.fill(0)
+
 
 def test():
     t1 = FdtdVar(480, 640)
@@ -227,8 +265,9 @@ else:
 print "Press s to start wave propagation"
 while True:
     # Reset domain
-    fs.mvx.fill(0)
-    fs.mvy.fill(0)
+    # fs.mvx.fill(0)
+    # fs.mvy.fill(0)
+    fs.update_domain()
 
     # Capture frame
     retval, frame = cap.read()
