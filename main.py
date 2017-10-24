@@ -38,7 +38,6 @@ elif dflag == "c":
             c0 = (float(vs), 0)
             mdensity = float(raw_input("Enter density of medium in kg/m^3: "))
             rho = (mdensity, 1.0e6)
-            wavel = c0[0] / freq
         except ValueError:
             sys.exit("Error: enter a numeric value, or air, or water")
     stype = raw_input("Enter point or line for type of source: ")
@@ -61,7 +60,7 @@ else:
     sys.exit("Error: enter d for default setup or c for custom")
 
 if np.amin(c0) == 0:
-    wavelmin = c0[0] / 20000.0
+    wavelmin = 300 / 20000.0
 else:
     wavelmin = np.amin(c0) / 20000.0
 
