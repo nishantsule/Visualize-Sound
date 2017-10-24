@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import sys
 
 # Courant number
-cn = 1.0 / 2.0
+cn = 0.9 / np.sqrt(2.0)
 # Pi
 pi = 3.14
 # Number of media = 2
@@ -12,30 +12,37 @@ nm = 2
 # Constants
 alpha = (0.0, 0.0)  # sound attenuation coefficient
 alphap = (0.0, 0.0)  # sound attenuation coefficient
+wavelmin = 346.13 / 20000.0
 # Ask for user input
-try:
-    freq = float(raw_input("Enter the sound frequency in Hz (20-20000): "))
-except ValueError:
-    sys.exit("Error: enter a number between 20 and 20000")
-vs = raw_input("Enter sound velocity in m/s (If medium is air or water enter air or water): ")
-if vs == "air":
+dflag = raw_input("Enter d if you want the default setup or c for custom: ")
+if dflag == "d":
+    freq = 15000
     c0 = (346.13, 0)
     rho = (1.2, 1.0e6)
-elif vs == "water":
-    c0 = (1481, 0)
-    rho = (1000, 1.0e6)
-else:
+    stype = "point"
+elif dflag == "c":
     try:
-        c0 = (float(vs), 0)
-        mdensity = float(raw_input("Enter density of medium in kg/m^3: "))
-        rho = (mdensity, 1.0e6)
-        wavel = c0[0] / freq
+        freq = float(raw_input("Enter the sound frequency in Hz (20-20000): "))
     except ValueError:
-        sys.exit("Error: enter a numeric value, or air, or water")
-wavelmin = 346.13 / 20000.0
-stype = raw_input("Enter point or line for type of source: ")
-if stype != "line" and stype != "point":
-    sys.exit("Error: source needs to be either point or line")
+        sys.exit("Error: enter a number between 20 and 20000")
+    vs = raw_input("Enter sound velocity in m/s (If medium is air or water enter air or water): ")
+    if vs == "air":
+        c0 = (346.13, 0)
+        rho = (1.2, 1.0e6)
+    elif vs == "water":
+        c0 = (1481, 0)
+        rho = (1000, 1.0e6)
+    else:
+        try:
+            c0 = (float(vs), 0)
+            mdensity = float(raw_input("Enter density of medium in kg/m^3: "))
+            rho = (mdensity, 1.0e6)
+            wavel = c0[0] / freq
+        except ValueError:
+            sys.exit("Error: enter a numeric value, or air, or water")
+    stype = raw_input("Enter point or line for type of source: ")
+    if stype != "line" and stype != "point":
+        sys.exit("Error: source needs to be either point or line")
 
 
 class FdtdVar:
@@ -54,7 +61,8 @@ class FdtdVar:
         self.gaussamp = np.zeros(temp)
         self.mpr = np.zeros(temp, dtype=np.int8)
         self.dx = wavelmin/10.0
-        self.dt = cn * self.dx / c0[0]
+        # self.dt = cn * self.dx / c0[0]
+        self.dt = cn * self.dx / np.amax(c0)
         self.ca = np.ones(nm)
         self.cb = np.ones(nm)
         self.da = np.ones(nm)
@@ -90,8 +98,16 @@ class FdtdVar:
             self.gaussamp = np.exp(-((rm - rc) ** 2 / (2 * fwhmr ** 2) + (cm - cc) ** 2 / (2 * fwhmc ** 2))).T
 
     def update_domain(self):
-        self.mvx[:, :] = 0
-        self.mvy[:, :] = 0
+        fs.mvx.fill(0)
+        fs.mvy.fill(0)
+        for i in range(0, nm, 1):
+            # self.ca[i] = ((2 * c0[i]**2 * rho[i] - alpha[i] * self.dt)
+            #               / (2 * c0[i]**2 * rho[i] + alpha[i] * self.dt))
+            self.cb[i] = c0[i] ** 2 * rho[i] * self.dt / self.dx
+            # self.da[i] = ((2 * rho[i] - alphap[i] * self.dt)
+            #               / (2 * rho[i] + alphap[i] * self.dt))
+            self.db[i] = self.dt / (rho[i] * self.dx)
+        self.da[1] = 0
 
     def source(self, nt):
         rm = self.r
@@ -197,11 +213,11 @@ retval = cap.get(3)
 columns = retval
 retval = cap.get(4)
 rows = retval
-print 'Default frame resolution ', columns, 'x', rows
+print 'Default frame resolution ', np.int(columns), 'x', np.int(rows)
 
 # Set frame resolution
-if columns > 1000:
-    if raw_input("Do you want to reduce resolution to increase speed? (y/n)") == "y":
+if dflag == "c" and columns > 1000:
+    if raw_input("Do you want to reduce resolution to increase speed? (y/n) ") == "y":
         print 'Setting new resolution to 640 x 480'
         columns = 640
         rows = 480
@@ -213,6 +229,13 @@ cap.set(4, rows)
 fs = FdtdVar(rows, columns)
 
 tc = 0
+
+if dflag == "c":
+    bflag = raw_input("Enter c for a closed domain or o for an open domain: ")
+    if bflag != "c" and bflag != "o":
+        sys.exit("Error: enter c for closed domain or o for open domain")
+else:
+    bflag = "c"
 
 # Wait to start wave propagation
 print "Press s to start wave propagation"
@@ -252,7 +275,8 @@ while True:
     # Update image with FDTD solution
     fs.fdtd_update()
     fs.source(tc)
-    fs.boundary()
+    if bflag == "o":
+        fs.boundary()
     imgdisp = img + fs.pr
 
     # Display image
