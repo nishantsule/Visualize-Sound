@@ -4,45 +4,6 @@ import matplotlib.pyplot as plt
 import sys
 import pyaudio
 
-rt = 80000
-rec_sec = 1
-chsize = 1024
-
-raw_input("Press Enter to record audio...")
-# Initialize portaudio
-p = pyaudio.PyAudio()
-astream = p.open(format=pyaudio.paInt16, channels=1, rate=rt, input=True, frames_per_buffer=chsize)
-
-# Record audio
-frames = []
-for i in range(0, np.int(rt / chsize * rec_sec)):
-    adata = astream.read(chsize)
-    frames.append(np.fromstring(adata, dtype=np.int16))
-
-# Close audio stream
-astream.stop_stream()
-astream.close()
-p.terminate()
-
-atemp = np.asfarray(np.hstack(frames))
-print np.amax(atemp), np.amin(atemp), np.mean(atemp)
-
-skipf = np.alen(atemp)/4
-end = np.alen(atemp)
-asource = ((atemp[skipf:end - skipf] - np.mean(atemp[skipf:end - skipf]))
-           / (np.amax(atemp[skipf:end - skipf]) - np.amin(atemp[skipf:end - skipf])))
-print "atemp shape", np.shape(atemp)
-print "asource shape", np.shape(asource)
-plt.figure()
-plt.plot(atemp)
-plt.figure()
-plt.plot(asource)
-
-sfreqspec = np.fft.rfft(asource)
-plt.figure()
-plt.plot(np.abs(sfreqspec)**2)
-plt.show()
-
 # Courant number
 cn = 0.9 / np.sqrt(2.0)
 # Pi
@@ -54,20 +15,66 @@ alphap = (0.0, 0.0)  # sound attenuation coefficient
 nm = 2
 
 # Ask for user input
-dflag = raw_input("Enter d if you want the default setup or c for custom: ")
+dflag = raw_input("Press d if you want the default setup or c for custom: ")
+print ""
 if dflag == "d":
     freq = 15000
     c0 = (346.13, 0)
     rho = (1.2, 1.0e6)
     stype = "point"
     mflag = "n"
-    print "Point source of 15000 Hz in air with default camera resolution"
+    sflag = "n"
+    print "Point source of 15000 Hz in a closed domain with air at 295 K using the default camera resolution"
+    print ""
 elif dflag == "c":
-    try:
-        freq = float(raw_input("Enter the sound frequency in Hz (20-20000): "))
-    except ValueError:
-        sys.exit("Error: enter a number between 20 and 20000")
-    vs = raw_input("Enter sound velocity in m/s (If medium is air or water enter air or water): ")
+    sflag = raw_input("Press a to record an audio source or n to enter a numeric source frequency: ")
+    print ""
+    if sflag == "a":
+        freq = 0
+        rt = 80000
+        rec_sec = 1
+        chsize = 1024
+        raw_input("Press enter to record audio...")
+        print ""
+        # Initialize portaudio
+        p = pyaudio.PyAudio()
+        astream = p.open(format=pyaudio.paInt16, channels=1, rate=rt, input=True, frames_per_buffer=chsize)
+        # Record audio
+        frames = []
+        for i in range(0, np.int(rt / chsize * rec_sec)):
+            adata = astream.read(chsize)
+            frames.append(np.fromstring(adata, dtype=np.int16))
+        # Close audio stream
+        astream.stop_stream()
+        astream.close()
+        p.terminate()
+        atemp = np.asfarray(np.hstack(frames))
+        skipf = np.alen(atemp) / 4
+        last = np.alen(atemp)
+        asource = ((atemp[skipf:last - skipf] - np.mean(atemp[skipf:last - skipf]))
+                   / (np.amax(atemp[skipf:last - skipf]) - np.amin(atemp[skipf:last - skipf])))
+        sfreqspec = np.fft.rfft(asource)
+        time = np.linspace(0, last, last) * rec_sec / rt
+        plt.figure()
+        plt.plot(time[skipf:last - skipf], asource)
+        plt.xlabel("time (s)")
+        plt.ylabel("rescaled amplitude (arb units)")
+        plt.tight_layout()
+        plt.figure()
+        plt.plot(np.abs(sfreqspec)**2)
+        plt.xlabel("freq (Hz)")
+        plt.ylabel("power (arb units)")
+        plt.tight_layout()
+    elif sflag == "n":
+        try:
+            freq = float(raw_input("Enter the sound frequency in Hz (20-20000): "))
+            print ""
+        except ValueError:
+            sys.exit("Error: enter a number between 20 and 20000")
+    else:
+        sys.exit("Error: press a to record an audio source or n to enter a numeric source frequency")
+    vs = raw_input("Enter sound velocity in m/s (If medium is air or water type air or water): ")
+    print ""
     if vs == "air":
         c0 = (346.13, 0)
         rho = (1.2, 1.0e6)
@@ -78,16 +85,20 @@ elif dflag == "c":
         try:
             c0 = (float(vs), 0)
             mdensity = float(raw_input("Enter density of medium in kg/m^3: "))
+            print ""
             rho = (mdensity, 1.0e6)
         except ValueError:
             sys.exit("Error: enter a numeric value, or air, or water")
     stype = raw_input("Enter point or line for type of source: ")
+    print ""
     if stype != "line" and stype != "point":
-        sys.exit("Error: source needs to be either point or line")
-    mflag = raw_input("Do you want a block of medium at a different temperature? (y/n) ")
+        sys.exit("Error: type either point or line for type of source")
+    mflag = raw_input("Do you want to insert a block of medium at a different temperature? (y/n): ")
+    print ""
     if mflag == "y":
         nm = 3
         temparature = float(raw_input("Enter absolute temperature in K (50-500): "))
+        print ""
         ct = c0[0] * np.sqrt(temparature/293)
         c0 = (c0[0], 0, ct)
         rho = (rho[0], 1.0e6, rho[0])
@@ -96,9 +107,9 @@ elif dflag == "c":
     elif mflag == "n":
         nm = 2
     else:
-        sys.exit("Error: enter y to add a block of different temperature or enter n")
+        sys.exit("Error: press y to insert a block of different temperature or press n")
 else:
-    sys.exit("Error: enter d for default setup or c for custom")
+    sys.exit("Error: press d for default setup or c for custom")
 
 if np.amin(c0) == 0:
     wavelmin = 300 / 20000.0
@@ -143,6 +154,7 @@ class FdtdVar:
         self.vyt = np.zeros(temp)
         print "dx [m] = ", self.dx
         print "dt [s] = ", self.dt
+        print ""
         rtemp = np.arange(0, self.r, 1)
         ctemp = np.arange(0, self.c, 1)
         rm, cm = np.meshgrid(rtemp, ctemp)
@@ -161,10 +173,15 @@ class FdtdVar:
         rm = self.r
         cm = self.c
         # prs = self.dx * np.sin(2 * pi * self.freq * nt * self.dt) / self.cb[0]
-        if nt < np.alen(asource):
-            prs = self.dx * asource[nt] / self.cb[0]
+        if sflag == "a":
+            if nt < np.alen(asource):
+                prs = self.dx * asource[nt] / self.cb[0]
+            else:
+                prs = 0
         else:
-            prs = 0
+            prs = self.dx * np.sin(2 * pi * self.freq * nt * self.dt) / self.cb[0]
+
+        # Update pressure with source
         self.pr[1:rm - 1, 1:cm - 1] = (self.pr[1:rm - 1, 1:cm - 1]
                                        - self.cb[self.mpr[1:rm - 1, 1:cm - 1]] * prs
                                        * self.gaussamp[1:rm - 1, 1:cm - 1] / self.dx)
@@ -285,8 +302,10 @@ rows = retval
 # Set frame resolution
 if dflag == "c" and columns > 1000:
     print 'Default frame resolution ', np.int(columns), 'x', np.int(rows)
-    if raw_input("Do you want to reduce resolution to increase speed? (y/n) ") == "y":
+    if raw_input("Do you want to reduce resolution to increase speed? (y/n): ") == "y":
+        print ""
         print 'Setting new resolution to 640 x 480'
+        print ""
         columns = 640
         rows = 480
 
@@ -299,14 +318,16 @@ fs = FdtdVar(rows, columns)
 tc = 0
 
 if dflag == "c":
-    bflag = raw_input("Enter c for a closed domain or o for an open domain: ")
+    bflag = raw_input("Press c for a closed domain or o for an open domain: ")
+    print ""
     if bflag != "c" and bflag != "o":
         sys.exit("Error: enter c for closed domain or o for open domain")
 else:
     bflag = "c"
 
 # Wait to start wave propagation
-print "Press s to start wave propagation"
+print "Press s to start wave propagation..."
+print ""
 while True:
     # Reset domain
     # fs.mvx.fill(0)
@@ -332,7 +353,8 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('s'):
         break
 
-print "Press q to quit"
+print "Press q to quit..."
+print ""
 
 while True:
     # Capture frame
@@ -358,3 +380,7 @@ while True:
 # Release the VideoCapture object
 cap.release()
 cv2.destroyAllWindows()
+
+plt.figure()
+plt.imshow(imgdisp, cmap="gray")
+plt.show()
