@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import sys
 import pyaudio
 
-rt = 1000
-rec_sec = 5.0
+rt = 80000
+rec_sec = 1
 chsize = 1024
 
 raw_input("Press Enter to record audio...")
@@ -19,25 +19,29 @@ for i in range(0, np.int(rt / chsize * rec_sec)):
     adata = astream.read(chsize)
     frames.append(np.fromstring(adata, dtype=np.int16))
 
-atemp = np.hstack(frames)
-atemp = np.asfarray(atemp)
-print np.amax(atemp), np.amin(atemp), np.mean(atemp)
-
 # Close audio stream
 astream.stop_stream()
 astream.close()
 p.terminate()
 
-asource = (atemp - np.mean(atemp)) / (np.amax(atemp) - np.amin(atemp))
+atemp = np.asfarray(np.hstack(frames))
+print np.amax(atemp), np.amin(atemp), np.mean(atemp)
+
+skipf = np.alen(atemp)/4
+end = np.alen(atemp)
+asource = ((atemp[skipf:end - skipf] - np.mean(atemp[skipf:end - skipf]))
+           / (np.amax(atemp[skipf:end - skipf]) - np.amin(atemp[skipf:end - skipf])))
+print "atemp shape", np.shape(atemp)
 print "asource shape", np.shape(asource)
-plt.figure(1)
+plt.figure()
+plt.plot(atemp)
+plt.figure()
 plt.plot(asource)
 
 sfreqspec = np.fft.rfft(asource)
-plt.figure(3)
+plt.figure()
 plt.plot(np.abs(sfreqspec)**2)
 plt.show()
-
 
 # Courant number
 cn = 0.9 / np.sqrt(2.0)
@@ -158,7 +162,7 @@ class FdtdVar:
         cm = self.c
         # prs = self.dx * np.sin(2 * pi * self.freq * nt * self.dt) / self.cb[0]
         if nt < np.alen(asource):
-            prs = asource[nt]
+            prs = self.dx * asource[nt] / self.cb[0]
         else:
             prs = 0
         self.pr[1:rm - 1, 1:cm - 1] = (self.pr[1:rm - 1, 1:cm - 1]
