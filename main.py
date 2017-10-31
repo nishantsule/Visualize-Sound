@@ -15,7 +15,7 @@ alphap = (0.0, 0.0)  # sound attenuation coefficient
 nm = 2
 
 # Ask for user input
-dflag = raw_input("Press d if you want the default setup or c for custom: ")
+dflag = raw_input("Enter 'd' to run the default setup or 'c' for customizing: ")
 print ""
 if dflag == "d":
     freq = 15000
@@ -27,14 +27,14 @@ if dflag == "d":
     print "Point source of 15000 Hz in a closed domain with air at 295 K using the default camera resolution"
     print ""
 elif dflag == "c":
-    sflag = raw_input("Press a to record an audio source or n to enter a numeric source frequency: ")
+    sflag = raw_input("Enter 'a' to record an audio source or 'n' to enter a numeric source frequency: ")
     print ""
     if sflag == "a":
         freq = 0
         rt = 80000
         rec_sec = 1
         chsize = 1024
-        raw_input("Press enter to record audio...")
+        raw_input("Start the audio and then press Enter to record...")
         print ""
         # Initialize portaudio
         p = pyaudio.PyAudio()
@@ -72,8 +72,8 @@ elif dflag == "c":
         except ValueError:
             sys.exit("Error: enter a number between 20 and 20000")
     else:
-        sys.exit("Error: press a to record an audio source or n to enter a numeric source frequency")
-    vs = raw_input("Enter sound velocity in m/s (If medium is air or water type air or water): ")
+        sys.exit("Error: press 'a' to record an audio source or n to enter a numeric source frequency")
+    vs = raw_input("Enter sound velocity in m/s (If medium is air or water type 'air' or 'water'): ")
     print ""
     if vs == "air":
         c0 = (346.13, 0)
@@ -88,8 +88,8 @@ elif dflag == "c":
             print ""
             rho = (mdensity, 1.0e6)
         except ValueError:
-            sys.exit("Error: enter a numeric value, or air, or water")
-    stype = raw_input("Enter point or line for type of source: ")
+            sys.exit("Error: enter a numeric value, or 'air', or 'water'")
+    stype = raw_input("Enter 'point' or 'line' for type of source: ")
     print ""
     if stype != "line" and stype != "point":
         sys.exit("Error: type either point or line for type of source")
@@ -97,7 +97,7 @@ elif dflag == "c":
     print ""
     if mflag == "y":
         nm = 3
-        temparature = float(raw_input("Enter absolute temperature in K (50-500): "))
+        temparature = float(raw_input("Enter the absolute temperature of the block in K (50-500): "))
         print ""
         ct = c0[0] * np.sqrt(temparature/293)
         c0 = (c0[0], 0, ct)
@@ -107,9 +107,9 @@ elif dflag == "c":
     elif mflag == "n":
         nm = 2
     else:
-        sys.exit("Error: press y to insert a block of different temperature or press n")
+        sys.exit("Error: enter 'y' to insert a block of different temperature or enter 'n'")
 else:
-    sys.exit("Error: press d for default setup or c for custom")
+    sys.exit("Error: enter 'd' for default setup or 'c' to customize")
 
 if np.amin(c0) == 0:
     wavelmin = 300 / 20000.0
@@ -318,15 +318,15 @@ fs = FdtdVar(rows, columns)
 tc = 0
 
 if dflag == "c":
-    bflag = raw_input("Press c for a closed domain or o for an open domain: ")
+    bflag = raw_input("Enter 'c' for a closed domain or 'o' for an open domain: ")
     print ""
     if bflag != "c" and bflag != "o":
-        sys.exit("Error: enter c for closed domain or o for open domain")
+        sys.exit("Error: enter 'c' for closed domain or 'o' for open domain")
 else:
     bflag = "c"
 
 # Wait to start wave propagation
-print "Press s to start wave propagation..."
+print "Click on the camera window and press 's' to start wave propagation..."
 print ""
 while True:
     # Reset domain
@@ -353,7 +353,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('s'):
         break
 
-print "Press q to quit..."
+print "Press 'q' to quit (when the camera window is topmost)..."
 print ""
 
 while True:
