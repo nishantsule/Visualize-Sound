@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import sys
 import pyaudio
 
-# Ask for user input
+#### Ask for user input
 plt.ion()
 dflag = input("Enter 'd' to run the default setup or 'c' for customizing: ")
 print("")
@@ -26,7 +26,7 @@ elif dflag == "c":
         # Initialize portaudio
         p = pyaudio.PyAudio()
         numdev = p.get_device_count() - 1
-        if numdev < 1:
+        if (numdev < 1):
             sys.exit("Error: You do not have the hardware to record audio")
         else:
             freq = 0
@@ -120,12 +120,12 @@ else:
     wavelmin = np.amin(c0) / 20000.0
 
 
-# The main class that defines all constants, variables, and functions
+#### The main class that defines all constants, variables, and functions
 class fdtdVar:
     def __init__(self, rs, cs):
-        # Constants
+        ## Constants
         cn = 0.9 / np.sqrt(2.0)  # Courant number
-        # Variables
+        ## Variables
         self.r = np.int(rs)  # number of rows
         self.c = np.int(cs)  # number of columns
         self.freq = freq  # frequency of source
@@ -137,9 +137,10 @@ class fdtdVar:
         self.mvy = np.zeros(temp, dtype=np.int8)
         temp = (self.r, self.c)
         self.pr = np.zeros(temp)  # pressure
+        self.mbndry = np.zeros(temp)  # image array for media block
         self.gaussamp = np.zeros(temp)
         self.mpr = np.zeros(temp, dtype=np.int8)
-        self.dx = wavelmin / 10.0  # grid cell size
+        self.dx = wavelmin/10.0  # grid cell size
         self.dt = cn * self.dx / np.amax(c0)  # time step size
         self.ca = np.ones(nm)
         self.cb = np.ones(nm)
@@ -171,7 +172,7 @@ class fdtdVar:
             fwhmc = 2
             fwhmr = 16
             self.gaussamp = np.exp(-((rm - rc) ** 2 / (2 * fwhmr ** 2) + (cm - cc) ** 2 / (2 * fwhmc ** 2))).T
-
+    
     def source(self, nt):
         rm = self.r
         cm = self.c
@@ -259,35 +260,39 @@ class fdtdVar:
         if mflag == "y":
             cm = self.c
             rm = self.r
-            c1 = np.int(cm / 2) + np.int(cm / 8)
-            c2 = c1 + np.int(cm / 8)
+            c1 = np.int(cm/2) + np.int(cm/8)
+            c2 = c1 + np.int(cm/8)
             self.mvx.fill(0)
             self.mvy.fill(0)
             self.mpr.fill(0)
             self.mvx[40:rm - 40, c1:c2] = 2
             self.mvy[40:rm - 40, c1:c2] = 2
             self.mpr[40:rm - 40, c1:c2] = 2
+            self.mbndry[40, c1:c2] = 0.50
+            self.mbndry[rm - 40, c1:c2] = 0.50
+            self.mbndry[40:rm - 40, c1] = 0.50
+            self.mbndry[40:rm - 40, c2] = 0.50
         elif mflag == "n":
             self.mvx.fill(0)
             self.mvy.fill(0)
             self.mpr.fill(0)
 
 
-# Ask user for option to read an image from file or start webcam to capture a frame
+#### Ask user for option to read an image from file or start webcam to capture a frame
 
 vflag = input("Do you want to read an image (enter i) or capture a frame from webcam (enter w)? ")
 print("")
 if vflag == "w":
-    # Create VideoCapture object
+    ## Create VideoCapture object
     cap = cv2.VideoCapture(0)
 
-    # Array sizes (resolution dependent)
+    ## Array sizes (resolution dependent)
     retval = cap.get(3)
     columns = retval
     retval = cap.get(4)
     rows = retval
 
-    # Set frame resolution
+    ## Set frame resolution
     if dflag == "c" and columns > 1000:
         print("Default frame resolution ", np.int(columns), "x", np.int(rows))
         if input("Do you want to reduce resolution to increase speed? (y/n): ") == "y":
@@ -300,23 +305,24 @@ if vflag == "w":
     cap.set(3, columns)
     cap.set(4, rows)
 elif vflag == "i":
-    # Read image
+    ## Read image
     imgname = input("Enter the filename of your image including extension: ")
     print("")
     img = cv2.imread(imgname, 0)
     rows, columns = img.shape
     ar = 640 / columns
     dim = (640, int(rows * ar))
+    # Image cleanup
     img = cv2.medianBlur(img, 21)
     resimg = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
     rows, columns = resimg.shape
-    print("Resized the image to 640 x 480 pixels")
+    print("Resized the image to 320 pixels wide")
     print("")
     threshimg = cv2.adaptiveThreshold(resimg, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 17, 5)
 else:
     sys.exit("Error: type either 'i' to read image or 'w' to read from webcam")
 
-# Create FDTD object
+#### Create FDTD object
 fs = fdtdVar(rows, columns)
 tc = 0
 
@@ -328,7 +334,7 @@ if dflag == "c":
 else:
     bflag = "c"
 
-# Wait to start wave propagation
+#### Wait to start wave propagation
 if vflag == "w":
     print("Click on the camera window and press 's' to start wave propagation...")
     print("")
@@ -340,69 +346,90 @@ if vflag == "w":
         retval, frame = cap.read()
 
         # Convert to grayscale
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) / 256.0
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # Create rigid material
-        imgtemp = np.pad(img, ((0, 0), (0, 1)), "constant", constant_values=1.0)
-        idx = imgtemp < 0.4
-        fs.mvx[idx] = 1
-        imgtemp = np.pad(img, ((0, 1), (0, 0)), "constant", constant_values=1.0)
-        idx = imgtemp < 0.4
-        fs.mvy[idx] = 1
-
-        # Display image
+        # Display image`
         cv2.imshow("frame", img)
         if cv2.waitKey(1) & 0xFF == ord("s"):
-            break
-elif vflag == "i":
-    print("Click on the image window and press 's' to start wave propagation...")
-    print("")
+            break 
+    
+    # Webcam frame cleanup   
+    blurimg = cv2.medianBlur(img, 21)
+    threshimg = cv2.adaptiveThreshold(blurimg, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 17, 5)
+    img = threshimg / 256.0
+    
+    # Clean up edges
+    img[0:5, 0:fs.c] = 1
+    img[fs.r - 5:fs.r, 0:fs.c] = 1
+    img[0:fs.r, 0:5] = 1
+    img[0:fs.r, fs.c - 5:fs.c] = 1
+    
+    # Create rigid material
+    imgtemp = np.pad(img, ((0, 0), (0, 1)), "constant", constant_values=1.0)
+    idx = imgtemp < 0.4
+    fs.mvx[idx] = 1
+    imgtemp = np.pad(img, ((0, 1), (0, 0)), "constant", constant_values=1.0)
+    idx = imgtemp < 0.4
+    fs.mvy[idx] = 1   
+    
     while True:
-        # Reset domain
-        fs.update_domain()
-
-        # Capture frame
-        img = threshimg / 256.0
-
-        # Create rigid material
-        imgtemp = np.pad(img, ((0, 0), (0, 1)), "constant", constant_values=1.0)
-        idx = imgtemp < 0.5
-        fs.mvx[idx] = 1
-        imgtemp = np.pad(img, ((0, 1), (0, 0)), "constant", constant_values=1.0)
-        idx = imgtemp < 0.5
-        fs.mvy[idx] = 1
-
+        # Update image with FDTD solution
+        fs.fdtd_update()
+        fs.source(tc)
+        if bflag == "o":
+            fs.boundary()
+        imgdisp = img + fs.pr + fs.mbndry
         # Display image
-        cv2.imshow("frame", img)
-        if cv2.waitKey(1) & 0xFF == ord("s"):
+        cv2.imshow("frame", imgdisp)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             break
-
-# Release the VideoCapture object
-if vflag == "w":
+        tc = tc + 1
+    ## Release the VideoCapture object
     cap.release()
     cv2.destroyAllWindows()
+            
+elif vflag == "i":
+    # Reset domain
+    fs.update_domain()
 
-print("Press 'q' to quit (when the image window is topmost)...")
-print("")
+    # Normalize image
+    img = threshimg / 256.0
+    
+    # Clean up edges
+    img[0:5, 0:fs.c] = 1
+    img[fs.r - 5:fs.r, 0:fs.c] = 1
+    img[0:fs.r, 0:5] = 1
+    img[0:fs.r, fs.c - 5:fs.c] = 1
+    
+    # Create rigid material
+    imgtemp = np.pad(img, ((0, 0), (0, 1)), "constant", constant_values=1.0)
+    idx = imgtemp < 0.5
+    fs.mvx[idx] = 1
+    imgtemp = np.pad(img, ((0, 1), (0, 0)), "constant", constant_values=1.0)
+    idx = imgtemp < 0.5
+    fs.mvy[idx] = 1
 
-while True:
-    # Update image with FDTD solution
-    fs.fdtd_update()
-    fs.source(tc)
-    if bflag == "o":
-        fs.boundary()
-    imgdisp = img + fs.pr
-
-    # Display image
-    cv2.imshow("frame", imgdisp)
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
-
-    tc = tc + 1
-
+    try:
+        while True:
+            # Update image with FDTD solution
+            fs.fdtd_update()
+            fs.source(tc)
+            if bflag == "o":
+                fs.boundary()
+            imgdisp = img + fs.pr + fs.mbndry
+            
+            # Display image
+            cv2.imshow("frame", imgdisp)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+            tc = tc + 1
+            
+    except KeyboardInterrupt:
+        pass
+        
 fig3 = plt.figure()
 ax3 = fig3.add_subplot(111)
 ax3.imshow(imgdisp, cmap="gray")
 fig3.tight_layout()
 fig3.show()
-fig3.canvas.draw()
+fig3.canvas.draw(
