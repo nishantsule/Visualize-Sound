@@ -432,4 +432,4 @@ ax3 = fig3.add_subplot(111)
 ax3.imshow(imgdisp, cmap="gray")
 fig3.tight_layout()
 fig3.show()
-fig3.canvas.draw(
+fig3.canvas.draw()
