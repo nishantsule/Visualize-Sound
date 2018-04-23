@@ -30,7 +30,6 @@ class fdtdVar:
         self.mvy = np.zeros(temp, dtype=np.int8)
         temp = (self.r, self.c)
         self.pr = np.zeros(temp)  # pressure
-        # self.mbndry = np.zeros(temp)  # image array for media block
         self.gaussamp = np.zeros(temp)
         self.mpr = np.zeros(temp, dtype=np.int8)
         self.dx = wavelmin/10.0  # grid cell size
@@ -49,9 +48,6 @@ class fdtdVar:
         temp = (self.c, 2, 2)
         self.vyb = np.zeros(temp)
         self.vyt = np.zeros(temp)
-        print("dx [m] = ", self.dx)
-        print("dt [s] = ", self.dt)
-        print("")
         rtemp = np.arange(0, self.r, 1)
         ctemp = np.arange(0, self.c, 1)
         rm, cm = np.meshgrid(rtemp, ctemp)
