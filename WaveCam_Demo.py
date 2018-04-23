@@ -2,15 +2,11 @@
 import numpy as np
 import cv2
 
-freq = 15000
+freq = 20000
 nm = 2
 c0 = (346.13, 0)
 rho = (1.2, 1.0e6)
-
-if np.amin(c0) == 0:
-    wavelmin = 300 / 20000.0
-else:
-    wavelmin = np.amin(c0) / 20000.0
+wavelmin = c0[0] / freq
 
 
 # The main class that defines all constants, variables, and functions
@@ -136,6 +132,7 @@ class fdtdVar:
         self.mvx.fill(0)
         self.mvy.fill(0)
         self.mpr.fill(0)
+
 
 # Create VideoCapture object
 cap = cv2.VideoCapture(0)
