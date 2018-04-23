@@ -159,7 +159,7 @@ while True:
 
     # Webcam frame cleanup
     blurimg = cv2.medianBlur(img, 21)
-    threshimg = cv2.adaptiveThreshold(blurimg, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 17, 5)
+    threshimg = cv2.adaptiveThreshold(blurimg, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 5)
     img = threshimg / 256.0
 
     # Clean up edges
