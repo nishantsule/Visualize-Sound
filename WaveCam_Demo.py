@@ -13,7 +13,7 @@ wavelmin = c0[0] / freq
 class fdtdVar:
     def __init__(self, rs, cs):
         # Constants
-        cn = 0.9 / np.sqrt(2.0)  # Courant number
+        cn = 1.0 / np.sqrt(2.0)  # Courant number
         # Variables
         self.r = np.int(rs)  # number of rows
         self.c = np.int(cs)  # number of columns
@@ -28,7 +28,7 @@ class fdtdVar:
         self.pr = np.zeros(temp)  # pressure
         self.gaussamp = np.zeros(temp)
         self.mpr = np.zeros(temp, dtype=np.int8)
-        self.dx = wavelmin/10.0  # grid cell size
+        self.dx = wavelmin/25.0  # grid cell size
         self.dt = cn * self.dx / np.amax(c0)  # time step size
         self.ca = np.ones(nm)
         self.cb = np.ones(nm)
@@ -107,7 +107,7 @@ class fdtdVar:
                                  + c3 * (self.vyt[2:ci, 0, 0] - 2 * self.vyt[1:ci - 1, 0, 0]
                                          + self.vyt[0:ci - 2, 0, 0] + self.vyt[2:ci, 1, 0]
                                          - 2 * self.vyt[1:ci - 1, 1, 0] + self.vyt[0:ci - 2, 1, 0]))
-        # Corners
+        Corners
         self.vx[0, 0] = self.vxl[1, 1, 1]
         self.vx[ri - 1, 0] = self.vxl[ri - 2, 1, 1]
         self.vx[0, ci] = self.vxr[1, 1, 1]
@@ -191,3 +191,4 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+print(tc)
