@@ -54,13 +54,13 @@ class fdtdVar:
         self.gaussamp = np.exp(-((rm - rc) ** 2 / (2 * fwhmr ** 2) + (cm - cc) ** 2 / (2 * fwhmc ** 2))).T
 
     def source(self, nt):
-        rm = self.r
-        cm = self.c
+        ri = self.r
+        ci = self.c
         prs = self.dx * np.sin(2 * np.pi * self.freq * nt * self.dt) / self.cb[0]
         # Update pressure with source
-        self.pr[1:rm - 1, 1:cm - 1] = (self.pr[1:rm - 1, 1:cm - 1]
-                                       - self.cb[self.mpr[1:rm - 1, 1:cm - 1]] * prs
-                                       * self.gaussamp[1:rm - 1, 1:cm - 1] / self.dx)
+        self.pr[1:ri - 1, 1:ci - 1] = (self.pr[1:ri - 1, 1:ci - 1]
+                                       - self.cb[self.mpr[1:ri - 1, 1:ci - 1]] * prs
+                                       * self.gaussamp[1:ri - 1, 1:ci - 1] / self.dx)
 
     def fdtd_update_pr(self):
         ri = self.r
@@ -182,6 +182,7 @@ while True:
     fs.source(tc)
     fs.boundary()
     fs.fdtd_update_v()
+    fs.update_domain()
     imgdisp = img + fs.pr
 
     tc = tc + 1
