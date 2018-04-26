@@ -189,7 +189,7 @@ while True:
     imgdisp = img + fs.pr
 
     tc = tc + 1
-    if tc > 1000:
+    if tc > 500:
         tc = 0
 
     # Display image
