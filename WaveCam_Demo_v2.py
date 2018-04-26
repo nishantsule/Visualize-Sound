@@ -56,7 +56,10 @@ class fdtdVar:
     def source(self, nt):
         ri = self.r
         ci = self.c
-        prs = self.dx * np.sin(2 * np.pi * self.freq * nt * self.dt) / self.cb[0]
+        tau = 1.0/np.pi/freq
+        t0 = 3.0 * tau
+        tgauss = np.exp(-((nt * self.dt - t0) ** 2 / tau ** 2))
+        prs = self.dx * np.sin(2 * np.pi * self.freq * nt * self.dt) * tgauss / self.cb[0]
         # Update pressure with source
         self.pr[1:ri - 1, 1:ci - 1] = (self.pr[1:ri - 1, 1:ci - 1]
                                        - self.cb[self.mpr[1:ri - 1, 1:ci - 1]] * prs
@@ -186,6 +189,8 @@ while True:
     imgdisp = img + fs.pr
 
     tc = tc + 1
+    if tc > 1000:
+        tc = 0
 
     # Display image
     cv2.imshow("frame", imgdisp)
