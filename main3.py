@@ -313,12 +313,13 @@ elif vflag == "i":
     ar = 640 / columns
     dim = (640, int(rows * ar))
     # Image cleanup
-    img = cv2.medianBlur(img, 21)
+#    img = cv2.medianBlur(img, 21)
     resimg = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
     rows, columns = resimg.shape
     print("Resized the image to 320 pixels wide")
     print("")
-    threshimg = cv2.adaptiveThreshold(resimg, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 17, 5)
+#    threshimg = cv2.adaptiveThreshold(resimg, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 17, 5)
+    threshimg = resimg
 else:
     sys.exit("Error: type either 'i' to read image or 'w' to read from webcam")
 
