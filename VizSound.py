@@ -31,15 +31,16 @@ class VSfdtd:
         self.mpr = np.zeros(temp, dtype=np.int8)
         self.ask_user_frame()
         self.ask_user_sound()
+        print('************************************')
+        print('Initialization steps completed')
+        print('************************************')
         
     def ask_user_frame(self):
-        print('''This program allows you to use your webcam to capture a frame or an image file to generate
-boundaries and simulate the propagation of sound and its interaction with those boundaries.
-So, the first thing to do is select whether you would like to read an image file or 
-capture a frame using a webcam.
-If you choose to use a webcam, make sure you have one connected. If you choose to read an image,
-make sure you have the filename of the image.''')
-        print('')
+        print('************************************')
+        print('Step 1. Select whether you would like to read an image file or capture a frame using a webcam.')
+        print('If you choose to use a webcam, make sure you have one connected.')
+        print('If you choose to read an image, make sure you have the filename of the image.')
+        print('************************************')
         global vflag
         vflag = input('Enter "i" to read an image or "w" to capture a frame using a webcam: ')
         print('')
@@ -123,18 +124,20 @@ make sure you have the filename of the image.''')
         return normimg
               
     def ask_user_sound(self):
-        print('''The next step is to choose the sound setup. You can either use the default setup or 
-customize it by providing your own values. The questions below will take you through the sound setup process. 
-The default sound setup is the following:
-        Single frequency sinusoidal point source placed at the center of the window
-        frequency of sound source = 15000 Hz
-        medium = air
-        sound velocity = 346.13 m/s
-        density of medium = 1.2 kg/m^3''')
+        print('************************************')
+        print('Step 2. Determine the sound setup, i.e., the sound source and the propagation medium')
+        print('The default sound setup is the following:')
+        print('Single frequency sinusoidal point source placed at the center of the window')
+        print('frequency of sound source = 15000 Hz')
+        print('medium = air')
+        print('sound velocity = 346.13 m/s')
+        print('density of medium = 1.2 kg/m^3')
+        print('')
+        print('You can also customize everything by entering "c" below and following instructions')
         print('')
         global dflag, mflag, sflag, bflag
         dflag = input('Enter "d" to run the default sound setup or "c" to customize: ')
-        print('')
+        print('************************************')
         if dflag == 'd':
             freq = 15000
             nm = 2
@@ -283,6 +286,7 @@ or enter "custom" to enter your own sound velocity and medium density''')
         temp = (self.c, 2, 2)
         self.vyb = np.zeros(temp)
         self.vyt = np.zeros(temp)
+        print('Grid size and time step used for the FDTD algorithm')
         print('dx [m] = ', self.dx)
         print('dt [s] = ', self.dt)
         print('')
