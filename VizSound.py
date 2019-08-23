@@ -16,8 +16,8 @@ class VSfdtd:
     def __init__(self):
         
         ## Initialize Variables
-        self.c = 160
-        self.r = 120
+        self.c = 320
+        self.r = 240
         temp = (self.r, self.c + 1)
         self.vx = np.zeros(temp)  # velocity along x
         self.mvx = np.zeros(temp, dtype=np.int8)
@@ -95,7 +95,7 @@ class VSfdtd:
             rows, columns = resimg.shape
             self.r = np.int(rows)  # number of rows
             self.c = np.int(columns)  # number of columns 
-            print('Resized the frame to 640 pixels wide')
+            print('Resized the frame to', self.c, 'pixels wide')
             print('')
             self.img_cap = self.frame_generate(resimg)
         else:
@@ -294,7 +294,7 @@ or enter "custom" to enter your own sound velocity and medium density''')
         ctemp = np.arange(0, self.c, 1)
         rm, cm = np.meshgrid(rtemp, ctemp)
         rc = np.int(self.r / 2)
-        cc = np.int(self.c / 2)
+        cc = np.int(self.c / 2 - 30)
         if stype == 'point':
             fwhmc = 2
             fwhmr = fwhmc
