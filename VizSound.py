@@ -407,10 +407,10 @@ or enter "custom" to enter your own sound velocity and medium density''')
             
             
 def propagate_sound(fs):
+    print("To stop: click on Kernel -> Interrupt")
     tc = 0
     fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111)
-    print("To stop: click on Kernel -> Interrupt")
     try:
         while True:
             # Update image with FDTD solution
