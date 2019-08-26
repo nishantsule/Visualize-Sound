@@ -5,11 +5,11 @@ import sys
 import pyaudio
 
 # All flags
-dflag = ''
-mflag = ''
-sflag = ''
-vflag = ''
-bflag = ''
+dflag = ''  # sound setup flag: d=default, c=custom
+mflag = ''  # medium with different temperature flag: y=yes, n=no
+sflag = ''  # Sound source flag: a=record, n=numeric
+vflag = ''  # video flag: w=webcam, i=image
+bflag = ''  # Boundary flag: c=closed, o=open
 
 class VSfdtd:
     
@@ -273,16 +273,13 @@ or enter "custom" to enter your own sound velocity and medium density''')
             rm = self.r
             c1 = np.int(cm/2) + np.int(cm/8)
             c2 = c1 + np.int(cm/8)
-            self.mvx.fill(0)
-            self.mvy.fill(0)
-            self.mpr.fill(0)
             self.mvx[40:rm - 40, c1:c2] = 2
             self.mvy[40:rm - 40, c1:c2] = 2
             self.mpr[40:rm - 40, c1:c2] = 2
-            self.mbndry[40, c1:c2] = 0.50
-            self.mbndry[rm - 40, c1:c2] = 0.50
-            self.mbndry[40:rm - 40, c1] = 0.50
-            self.mbndry[40:rm - 40, c2] = 0.50
+            self.mbndry[40, c1:c2] = -1
+            self.mbndry[rm - 40, c1:c2] = -1
+            self.mbndry[40:rm - 40, c1] = -1
+            self.mbndry[40:rm - 40, c2] = -1
         elif mflag == 'n':
             self.mvx.fill(0)
             self.mvy.fill(0)
