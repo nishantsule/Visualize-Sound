@@ -280,15 +280,13 @@ or enter "custom" to enter your own sound velocity and medium density''')
             self.mbndry[rm - 40, c1:c2] = -1
             self.mbndry[40:rm - 40, c1] = -1
             self.mbndry[40:rm - 40, c2] = -1
-        elif mflag == 'n':
-            self.mvx.fill(0)
-            self.mvy.fill(0)
-            self.mpr.fill(0)
-            
+        else:
+            pass
             
 def propagate_sound(fs):
     print("To stop: click on Kernel -> Interrupt")
     tc = 0
+    fs.update_domain()
     fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111)
     try:
