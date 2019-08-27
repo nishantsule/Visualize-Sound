@@ -60,7 +60,8 @@ class VSfdtd:
             print('')
             cap.set(3, self.c)
             cap.set(4, self.r)
-            print(cap.get(3), cap.get(4))
+            if cap.get(3) != self.c: 
+                sys.exit('Error: could not change camera resolution. Try using an external webcam to fix the problem.')           
             print('Click on the camera window and press "c" to capture a frame...')
             print('')
             
