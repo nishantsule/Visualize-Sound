@@ -3,6 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import sys
 import pyaudio
+from IPython.display import clear_output
 
 # All flags
 dflag = ''  # sound setup flag: d=default, c=custom
@@ -10,6 +11,7 @@ mflag = ''  # medium with different temperature flag: y=yes, n=no
 sflag = ''  # Sound source flag: a=record, n=numeric
 vflag = ''  # video flag: w=webcam, i=image
 bflag = ''  # Boundary flag: c=closed, o=open
+iflag = ''  # image flag: y=yes, n=no
 
 class VSfdtd:
     
@@ -37,6 +39,10 @@ class VSfdtd:
         
     def ask_user_frame(self):
         ## Read image
+        print('************************************')
+        print('Step 1. Input the image that you want to use for generating boundaries')
+        print('The image will be resized to 320 by 240 pixels and cleaned up if its not a binary image')
+        print('')
         imgname = input('Enter the filename of your image including extension: ')
         print('')
         img = cv2.imread(imgname, 0)
@@ -53,15 +59,18 @@ class VSfdtd:
             
     def frame_generate(self, img):
         # Image cleanup
-        blurimg = cv2.medianBlur(img, 11)
-        threshimg = cv2.adaptiveThreshold(blurimg, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 7, 3)
-        normimg = threshimg / 256.0
-        
-        # Clean up edges
-        normimg[0:5, 0:self.c] = 1
-        normimg[self.r - 5:self.r, 0:self.c] = 1
-        normimg[0:self.r, 0:5] = 1
-        normimg[0:self.r, self.c - 5:self.c] = 1
+        iflag = input('Is your input image binary? (y/n): ')
+        if iflag == 'y':
+            normimg = img / 256.0
+        else:
+            blurimg = cv2.medianBlur(img, 11)
+            threshimg = cv2.adaptiveThreshold(blurimg, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 7, 3)
+            normimg = threshimg / 256.0
+            # Clean up edges
+            normimg[0:5, 0:self.c] = 1
+            normimg[self.r - 5:self.r, 0:self.c] = 1
+            normimg[0:self.r, 0:5] = 1
+            normimg[0:self.r, self.c - 5:self.c] = 1
         
         # Create rigid material
         imgtemp = np.pad(normimg, ((0, 0), (0, 1)), "constant", constant_values=1.0)
@@ -298,8 +307,10 @@ def propagate_sound(fs):
                 fs.boundary()
             imgdisp = fs.img_cap + fs.pr + fs.mbndry
             ax.clear()
+#             clear_output(wait=True)
             ax.pcolormesh(imgdisp, cmap="gray", vmin=-1, vmax=1)
             fig.canvas.draw()
+            fig.show();
             tc = tc + 1
     except KeyboardInterrupt:
         pass    
